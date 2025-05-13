@@ -1,0 +1,9 @@
+pandas
+plotly
+streamlit
+openpyxl
+pyxirr
+numpy
+scipy
+python-dateutil
+numpy_financial
