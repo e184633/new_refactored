@@ -7,3 +7,4 @@ numpy
 scipy
 python-dateutil
 numpy_financial
+streamlit_analytics

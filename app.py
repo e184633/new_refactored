@@ -21,6 +21,26 @@ QUARTERLY_MONTH_INDEX = 2  # Third month in quarter (0-based index)
 
 # Set the page layout to wide (must be the first Streamlit command)
 st.set_page_config(layout="wide")
+# After st.set_page_config() at the top of your app
+STATCOUNTER_CODE = """
+<!-- Default Statcounter code for Master Model -->
+<script type="text/javascript">
+var sc_project=13135593; 
+var sc_invisible=1; 
+var sc_security="ff856198"; 
+</script>
+<script type="text/javascript"
+src="https://www.statcounter.com/counter/counter.js" async></script>
+<noscript><div class="statcounter"><a title="Web Analytics Made Easy -
+Statcounter" href="https://statcounter.com/" target="_blank"><img
+class="statcounter" src="https://c.statcounter.com/13135593/0/ff856198/1/"
+alt="Web Analytics Made Easy - Statcounter"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+<!-- End of Statcounter Code -->
+"""
+
+st.markdown(STATCOUNTER_CODE, unsafe_allow_html=True)
+
 # Force light theme with a single line of CSS
 st.markdown('<style>.stApp {background-color: #FFFFFF; color: #31333F;}</style>', unsafe_allow_html=True)
 
@@ -196,4 +216,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import streamlit_analytics2 as streamlit_analytics
+
+    with streamlit_analytics.track():
+        main()
