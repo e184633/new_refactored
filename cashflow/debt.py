@@ -53,7 +53,7 @@ class LoanProcessor:
             columns='MONTH_STR',
             values='CASH OUT',
             aggfunc='sum'
-        ).fillna(0.0)
+        ).infer_objects(False).fillna(0.0)
 
         # Flip sign as cash out doesn't register as cost
         pivoted = -pivoted

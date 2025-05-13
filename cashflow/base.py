@@ -2,6 +2,7 @@
 from datetime import datetime
 
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 from config import DEFAULT_CONFIG
 
@@ -13,9 +14,9 @@ class DatePeriodProcessor:
         """Initialize date processor with key project dates."""
         self.acquisition_date = pd.Timestamp(acquisition_date)
         self.start_date = pd.Timestamp(start_date)
-        self.end_date = pd.Timestamp(end_date)
-        self.cutoff_date = (pd.Timestamp(cutoff_date) if cutoff_date
-                            else pd.Timestamp(DEFAULT_CONFIG['cutoff_date']))
+        self.end_date = pd.Timestamp(end_date) + relativedelta(days=31)
+        self.cutoff_date = (pd.Timestamp(cutoff_date) + relativedelta(days=31) if cutoff_date
+                            else pd.Timestamp(DEFAULT_CONFIG['cutoff_date']) + relativedelta(days=31))
 
         # Generate period ranges
         self.all_periods = pd.date_range(
