@@ -148,6 +148,32 @@ class ProjectCashflow(BaseCashflowEngine):
         last_period_fee = (max_tdc * 0.01) - total_fee_so_far
         self.cashflow_df.loc['Management Fee', last_period_str] = last_period_fee
 
+    def populate_financing_costs(self):
+        """Populate financing costs from debt analysis."""
+        if hasattr(self, 'financing_costs') and self.financing_costs:
+            # Check if 'financing costs' or 'Financing costs' exists in the index
+            if 'Financing costs' in self.cashflow_df.index:
+                category = 'Financing costs'
+            else:
+                # Find any category that matches case-insensitively
+                for idx in self.cashflow_df.index:
+                    if idx.lower() == 'financing costs':
+                        category = idx
+                        break
+                else:
+                    # If not found, create the category
+                    self.cashflow_df.loc['financing costs'] = 0.0
+                    category = 'financing costs'
+
+            # Now populate the values
+            for period, amount in self.financing_costs.items():
+                if period in self.cashflow_df.columns:
+                    self.cashflow_df.loc[category, period] = amount
+
+    def set_financing_costs(self, financing_costs):
+        """Set financing costs from debt analysis."""
+        self.financing_costs = financing_costs
+
     def calculate_totals(self):
         """Calculate category totals for each period."""
         for period_str in self.date_processor.monthly_period_strs:
@@ -187,6 +213,9 @@ class ProjectCashflow(BaseCashflowEngine):
 
         # Calculate management fee (needs totals)
         self.forecast_management_fee()
+
+        # Add financing costs from debt calculation
+        self.populate_financing_costs()
 
         # Recalculate totals with management fee
         self.calculate_totals()

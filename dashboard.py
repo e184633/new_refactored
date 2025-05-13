@@ -67,7 +67,7 @@ def create_cashflow_analysis(cashflow_data: pd.DataFrame) -> None:
     hierarchy = {
         'Acquisition Total': CATEGORIES['acquisition_components'],
         'Development': CATEGORIES['development_components'],
-        'Financing Costs': CATEGORIES['financing'],
+        'Financing costs': CATEGORIES['financing'],
         'Total Project Cashflow': CATEGORIES['total_project_components'],
         # 'Capital Financing Costs': ['Operation'],
     }
