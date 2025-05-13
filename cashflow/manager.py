@@ -85,10 +85,6 @@ class CashflowManager:
         return financing_costs
 
     def generate_cashflow(self):
-        """Generate project cashflow."""
-        return self.project_cashflow.generate_cashflow()
-
-    def generate_cashflow(self):
         """Generate project cashflow with financing costs from debt data."""
         # First generate the debt cashflow to calculate financing costs
         self.generate_debt_cashflow()

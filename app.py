@@ -167,9 +167,8 @@ def load_loan_statement(file_path: str, loan_name: str):
     bank_statement = load_bank_statement(file_path)
     return bank_statement[bank_statement.SOURCE == loan_name]
 
+
 def main():
-
-
     file_path = 'SAV Fund & Projects - Reconciliation - 2025.03.xlsx'
     bank_statement_df = load_bank_statement(file_path)
     senior_loan_statement_df = load_loan_statement(file_path, loan_name='OakNorth Loan Account')
@@ -186,7 +185,6 @@ def main():
 
     # Generate both cashflows
     cashflow_df = cashflow_gen.generate_cashflow()
-    debt_cashflow_df = cashflow_gen.generate_debt_cashflow()
 
     # Pass the generator to the dashboard
     create_dashboard(

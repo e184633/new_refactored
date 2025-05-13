@@ -152,18 +152,7 @@ class ProjectCashflow(BaseCashflowEngine):
         """Populate financing costs from debt analysis."""
         if hasattr(self, 'financing_costs') and self.financing_costs:
             # Check if 'financing costs' or 'Financing costs' exists in the index
-            if 'Financing costs' in self.cashflow_df.index:
-                category = 'Financing costs'
-            else:
-                # Find any category that matches case-insensitively
-                for idx in self.cashflow_df.index:
-                    if idx.lower() == 'financing costs':
-                        category = idx
-                        break
-                else:
-                    # If not found, create the category
-                    self.cashflow_df.loc['financing costs'] = 0.0
-                    category = 'financing costs'
+            category = 'Financing costs'
 
             # Now populate the values
             for period, amount in self.financing_costs.items():
