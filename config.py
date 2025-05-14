@@ -5,12 +5,14 @@ DEFAULT_CONFIG = {
     "acquisition_date": datetime.strptime("Mar-21", "%b-%y"),
     "cutoff_date": datetime.strptime('Dec-24', "%b-%y"),
     "start_date": datetime.strptime("Jan-25", "%b-%y"),
-    "end_date": datetime.strptime("May-25", "%b-%y"),
     "refinancing_date": datetime.strptime("Mar-24", "%b-%y"),
-    "forecast_periods_count": 5,
+    "exit_date": datetime.strptime("Jun-25", "%b-%y"),
+    "start_of_cash_payment": datetime.strptime("Jun-25", "%b-%y"),
+    "forecast_periods_count": 4,
 
     # Development costs configuration
     "additional_unit_cost": 830_000.0,
+    "additional_advertisement_cost": 200_000,
     "development_cost_adjustment": 0.0,
     "unexpected_costs": 0.0,
 
@@ -152,21 +154,22 @@ CATEGORIES = {
     "all": [
         "Actual/Forecast", "Acquisition", "SDLT", "Agent Fees", "Development", "Accountancy",
         "Planning & Design", "Legal & Professional", "Management Fee", "Insurance",
-        "VAT", "Additional", "Operation", "Total Development Costs", "Total Project Cashflow", "Acquisition Total",
+        "VAT", "Additional Advertisement", "Operation", "Total Development Costs", "Total Project Cashflow", "Acquisition Total",
         "Financing costs",
     ],
     "development": [
         "Accountancy", "Planning & Design", "Development costs", "Legal & Professional",
-        "Management Fee", "Insurance", "Operation", "VAT", "Additional", "Financing costs"
+        "Management Fee", "Insurance", "Operation", "VAT", "Additional Advertisement", "Financing costs"
     ],
+
     "historical": [
         "Acquisition", "SDLT", "Agent Fees", "Accountancy", "Planning & Design",
         "Development costs", "Legal & Professional", "Management Fee", "Insurance",
-        "VAT", "Additional", "Operation"
+        "VAT", "Additional Advertisement", "Operation"
     ],
     "development_components": [
         "Accountancy", "Planning & Design", "Development costs", "Legal & Professional",
-        "Management Fee", "Insurance", "Operation", "VAT", "Additional",
+        "Management Fee", "Insurance", "Operation", "VAT", "Additional Advertisement",
     ],
     "acquisition_components": [
         "Acquisition",

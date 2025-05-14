@@ -18,7 +18,6 @@ FORECAST_START_DATE = DEFAULT_CONFIG['cutoff_date'] + relativedelta(months=1)
 
 ACQUISITION_DATE = DEFAULT_CONFIG['acquisition_date']
 CUTOFF_DATE = DEFAULT_CONFIG.get('cutoff_date') + relativedelta(day=31)
-END_DATE = DEFAULT_CONFIG.get('end_date') + relativedelta(day=31)
 DEVELOPMENT_COSTS_STR = 'Development costs'
 ANTVIC_STR = 'antvic'
 QUARTERLY_MONTH_INDEX = 2  # Third month in quarter (0-based index)

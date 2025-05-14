@@ -13,7 +13,7 @@ OVERVIEW_COLUMNS = [f"Inception to {DEFAULT_CONFIG['cutoff_date'].strftime(SAV_D
                     f"{DEFAULT_CONFIG['start_date'].strftime(SAV_DATE_FORMAT)} to Exit", 'Total']
 ACQUISITION_DATE = DEFAULT_CONFIG['acquisition_date']
 CUTOFF_DATE = DEFAULT_CONFIG.get('cutoff_date') + relativedelta(day=31)
-END_DATE = DEFAULT_CONFIG.get('end_date') + relativedelta(day=31)
+EXIT_DATE = DEFAULT_CONFIG.get('exit_date') + relativedelta(day=31)
 DEVELOPMENT_COSTS_STR = 'Development costs'
 ANTVIC_STR = 'antvic'
 QUARTERLY_MONTH_INDEX = 2  # Third month in quarter (0-based index)
@@ -88,12 +88,12 @@ def create_input_form(default_config: dict) -> dict:
             # print(start_date, type(start_date))
         col3, col4 = st.columns(2)
         with col3:
-            end_date = st.date_input(
-                "End Date",
+            exit_date = st.date_input(
+                "Exit Date",
                 min_value=datetime(2000, 1, 1),  # Optional: set minimum date
                 max_value=datetime(2030, 12, 31),  # Optional: set maximum date
-                value=default_config["end_date"],
-                key="end_date")
+                value=default_config["exit_date"],
+                key="exit_date")
         with col4:
             forecast_periods_count = st.number_input(
                 "Periods",
@@ -172,7 +172,7 @@ def create_input_form(default_config: dict) -> dict:
     return {
         "acquisition_date": acquisition_date,
         "start_date": start_date,
-        "end_date": end_date,
+        "end_date": exit_date,
         "forecast_periods_count": forecast_periods_count,
         "input_assumptions": input_assumptions,
         "proposed_budget_data": proposed_budget_data,

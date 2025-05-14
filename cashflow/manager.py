@@ -1,7 +1,7 @@
 # cashflow/manager.py
 from .debt import DebtCashflow
 from .project import ProjectCashflow
-
+from config import DEFAULT_CONFIG
 
 class CashflowManager:
     """Coordinates different cashflow processors and provides a unified interface."""
@@ -27,7 +27,8 @@ class CashflowManager:
             input_assumptions,
             additional_unit_cost,
             proposed_budget_data=None,
-            unexpected_costs=0.0
+            unexpected_costs=0.0,
+            additional_advertisement_cost=DEFAULT_CONFIG['additional_advertisement_cost'],
     ):
         # Create project cashflow processor
         self.project_cashflow = ProjectCashflow(
@@ -40,7 +41,8 @@ class CashflowManager:
             input_assumptions=input_assumptions,
             additional_unit_cost=additional_unit_cost,
             proposed_budget_data=proposed_budget_data,
-            unexpected_costs=unexpected_costs
+            unexpected_costs=unexpected_costs,
+            additional_advertisement_cost=additional_advertisement_cost
         )
 
         # Create debt cashflow processor
@@ -50,7 +52,8 @@ class CashflowManager:
             acquisition_date=acquisition_date,
             start_date=start_date,
             end_date=end_date,
-            annual_base_rate=annual_base_rate
+            annual_base_rate=annual_base_rate,
+            forecast_periods_count=forecast_periods_count,
         )
 
         # Store primary parameters

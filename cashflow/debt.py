@@ -166,9 +166,10 @@ class DebtCashflow(BaseCashflowEngine):
             acquisition_date,
             start_date,
             end_date,
-            annual_base_rate
+            annual_base_rate,
+            forecast_periods_count,
     ):
-        super().__init__(acquisition_date, start_date, end_date)
+        super().__init__(acquisition_date, start_date, end_date, forecast_periods_count=forecast_periods_count)
 
         self.senior_loan_statement = senior_loan_statement_df
         self.mezzanine_loan_statement = mezzanine_loan_statement_df
@@ -298,6 +299,9 @@ class DebtCashflow(BaseCashflowEngine):
 
     def generate_cashflow(self):
         """Generate the complete debt cashflow."""
+        # Reset the cashflow DataFrame
+        self.cashflow_df = self.initialise_dataframe(['Actual/Forecast'], include_category_col=True)
+
         # Add annual base rate
         self.populate_annual_base_rate()
 
@@ -330,36 +334,42 @@ class DebtCashflow(BaseCashflowEngine):
                 for col in self.date_processor.overview_columns:
                     self.cashflow_df.at[idx, col] = ""
 
-        # Calculate summary columns for numerical rows
+        # Get categories that need totals calculated (exclude special rows)
+        numerical_categories = []
         for idx, row in self.cashflow_df.iterrows():
             category = row['Category']
-            if category in ['Opening balance', 'Closing balance, incl rolled interest',
-                            'Annual Base Rate', 'Actual/Forecast']:
-                continue
+            if category not in ['Opening balance', 'Closing balance, incl rolled interest',
+                                'Annual Base Rate', 'Actual/Forecast']:
+                numerical_categories.append(idx)
 
-            # Calculate inception total
-            inception_cols = self.date_processor.period_strs('historical')
-            values = [
-                float(row[col]) for col in inception_cols
-                if col in self.cashflow_df.columns and isinstance(row[col], (int, float))
-            ]
-            self.cashflow_df.at[idx, self.date_processor.overview_columns[0]] = sum(values)
+        # Calculate summary columns using standardized approach
+        for column_type in ['inception_to_cutoff', 'start_to_exit', 'total']:
+            # Determine target column and date range
+            if column_type == 'inception_to_cutoff':
+                target_col = self.date_processor.overview_columns[0]
+                start_date = self.date_processor.acquisition_date
+                end_date = self.date_processor.cutoff_date
+            elif column_type == 'start_to_exit':
+                target_col = self.date_processor.overview_columns[1]
+                start_date = self.date_processor.start_date
+                end_date = self.date_processor.end_date
+            elif column_type == 'total':
+                target_col = self.date_processor.overview_columns[2]
+                start_date = self.date_processor.acquisition_date
+                end_date = self.date_processor.calculated_end_date
 
-            # Calculate forecast total
-            forecast_cols = self.date_processor.period_strs('forecast')
-            values = [
-                float(row[col]) for col in forecast_cols
-                if col in self.cashflow_df.columns and isinstance(row[col], (int, float))
-            ]
-            self.cashflow_df.at[idx, self.date_processor.overview_columns[1]] = sum(values)
+            # Get periods within range
+            period_dates = [p for p in self.date_processor.all_periods if start_date <= p <= end_date]
+            period_cols = [p.strftime('%b-%y') for p in period_dates]
 
-            # Calculate grand total
-            monthly_cols = self.date_processor.monthly_period_strs
-            values = [
-                float(row[col]) for col in monthly_cols
-                if col in self.cashflow_df.columns and isinstance(row[col], (int, float))
-            ]
-            self.cashflow_df.at[idx, self.date_processor.overview_columns[2]] = sum(values)
+            # Sum values for each category
+            for idx in numerical_categories:
+                values = [
+                    float(self.cashflow_df.at[idx, col])
+                    for col in period_cols
+                    if col in self.cashflow_df.columns and
+                       isinstance(self.cashflow_df.at[idx, col], (int, float))
+                ]
+                self.cashflow_df.at[idx, target_col] = sum(values)
 
         return self.cashflow_df
-    

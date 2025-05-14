@@ -14,7 +14,7 @@ OVERVIEW_COLUMNS = [f"Inception to {DEFAULT_CONFIG['cutoff_date'].strftime(SAV_D
 ACQUISITION_DATE = DEFAULT_CONFIG['acquisition_date']
 START_DATE = DEFAULT_CONFIG.get('start_date')  # Forecast start date
 CUTOFF_DATE = DEFAULT_CONFIG.get('cutoff_date') + relativedelta(day=31)
-END_DATE = DEFAULT_CONFIG.get('end_date') + relativedelta(day=31)
+END_DATE = DEFAULT_CONFIG.get('exit_date') + relativedelta(day=31)
 
 
 def get_all_periods(acquisition_date, start_date, end_date, forecast_periods_count):

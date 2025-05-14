@@ -11,16 +11,9 @@ from pyxirr import xirr
 from config import DEFAULT_CONFIG
 
 SAV_DATE_FORMAT = '%b-%y'
-FORECAST_START_DATE = DEFAULT_CONFIG['cutoff_date'] + relativedelta(months=1)
+
 OVERVIEW_COLUMNS = [f"Inception to {DEFAULT_CONFIG['cutoff_date'].strftime(SAV_DATE_FORMAT)}",
                     f"{DEFAULT_CONFIG['start_date'].strftime(SAV_DATE_FORMAT)} to Exit", 'Total']
-ACQUISITION_DATE = DEFAULT_CONFIG['acquisition_date']
-CUTOFF_DATE = DEFAULT_CONFIG.get('cutoff_date') + relativedelta(day=31)
-END_DATE = DEFAULT_CONFIG.get('end_date') + relativedelta(day=31)
-DEVELOPMENT_COSTS_STR = 'Development costs'
-ANTVIC_STR = 'antvic'
-QUARTERLY_MONTH_INDEX = 2  # Third month in quarter (0-based index)
-
 
 def calculate_irr(dates: List[datetime], cashflows: List[float]) -> float:
     """
