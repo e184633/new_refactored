@@ -190,11 +190,9 @@ class BaseCashflowEngine:
             df = pd.DataFrame(index=categories, columns=columns, dtype=object)
 
             # Set Actual/Forecast row
-            print('all_periods' , self.date_processor.all_periods)
             if 'Actual/Forecast' in categories:
                 for period in self.date_processor.all_periods:
                     period_str = period.strftime('%b-%y')
-                    print(period , self.date_processor.current_date)
                     df.loc[
                         'Actual/Forecast', period_str] = 'Actual' if period <= self.date_processor.current_date else 'Forecast'
 

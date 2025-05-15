@@ -50,6 +50,8 @@ DEFAULT_CONFIG = {
         # IMS fee rates
         "Senior IMS Rate": 0.0005,  # 0.05% on senior loan
         "Mezzanine IMS Rate": 0.0005,  # 0.05% on mezzanine loan
+
+
     },
 
     # Budget data
@@ -57,6 +59,9 @@ DEFAULT_CONFIG = {
         "pre_antvic_budget": 2_124_436,
         "revised_budget": 21_620_551
     },
+    # Shareholder names
+    "shareholder_names": ["Shareholder Capital: SAV", "Shareholder Capital: FGC", "Shareholder Capital: FGC2"],
+
 
     # Monthly base rates (base rate changes over time)
     "annual_base_rates": {

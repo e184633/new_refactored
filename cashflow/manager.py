@@ -2,6 +2,8 @@
 from .debt import DebtCashflow
 from .project import ProjectCashflow
 from config import DEFAULT_CONFIG
+from .equity import EquityCashflow
+
 
 class CashflowManager:
     """Coordinates different cashflow processors and provides a unified interface."""
@@ -55,6 +57,16 @@ class CashflowManager:
             annual_base_rate=annual_base_rate,
             forecast_periods_count=forecast_periods_count,
         )
+        # Create equity cashflow processor
+        self.equity_cashflow = EquityCashflow(
+            bank_statement_df=bank_statement_df,
+            acquisition_date=acquisition_date,
+            start_date=start_date,
+            end_date=end_date,
+            forecast_periods_count=forecast_periods_count,
+            input_assumptions=input_assumptions,
+
+        )
 
         # Store primary parameters
         self.acquisition_date = acquisition_date
@@ -105,3 +117,8 @@ class CashflowManager:
         """Generate debt cashflow and store it as an attribute."""
         self.debt_cashflow_df = self.debt_cashflow.generate_cashflow()
         return self.debt_cashflow_df
+
+    def generate_equity_cashflow(self):
+        """Generate equity cashflow."""
+        self.equity_cashflow_df = self.equity_cashflow.generate_cashflow()
+        return self.equity_cashflow_df

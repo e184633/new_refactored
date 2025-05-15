@@ -24,14 +24,15 @@ QUARTERLY_MONTH_INDEX = 2  # Third month in quarter (0-based index)
 
 
 def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
-                     annual_base_rate: float = 0.001, mc_config: dict = None) -> None:
+                     annual_base_rate: float = 0.001, debt_cashflow_df=None, equity_cashflow_df=None,  mc_config: dict = None) -> None:
     """Create the Streamlit dashboard with cashflow data and Monte Carlo simulations."""
     st.title('Cashflow Analysis Dashboard')
 
     # Create tabs for different dashboard sections
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "Cashflow Analysis",
-        "Debt Cashflow",  # New tab
+        "Debt Cashflow",
+        "Equity Cashflow",
         "Monte Carlo Simulation",
         "Profit Analysis"
     ])
@@ -41,19 +42,21 @@ def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
 
     with tab2:
         # Use the debt cashflow from the generator instead of creating it here
-        display_debt_cashflow(cashflow_generator.debt_cashflow_df)
+        display_debt_cashflow(debt_cashflow_df)
 
         # Create debt charts if data is available
         if not cashflow_generator.debt_cashflow_df.empty:
             create_debt_charts(cashflow_generator.debt_cashflow_df)
-
     with tab3:
+        display_debt_cashflow(equity_cashflow_df)
+
+    with tab4:
         if mc_config:
             create_monte_carlo_analysis(cashflow_data, mc_config)
         else:
             st.warning("Monte Carlo simulation configuration not provided.")
 
-    with tab4:
+    with tab5:
         if mc_config and 'profit_details' in mc_config:
             create_profit_analysis(cashflow_data, mc_config['profit_details'])
         else:

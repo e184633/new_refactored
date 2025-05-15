@@ -205,10 +205,14 @@ def main():
 
     # Generate both cashflows
     cashflow_df = cashflow_gen.generate_cashflow()
+    debt_cashflow_df = cashflow_gen.generate_debt_cashflow()
+    equity_cashflow_df = cashflow_gen.generate_equity_cashflow()
 
     # Pass the generator to the dashboard
     create_dashboard(
         cashflow_df,
+        debt_cashflow_df=debt_cashflow_df,
+        equity_cashflow_df=equity_cashflow_df,
         cashflow_generator=cashflow_gen,  # Pass the generator instead of loan statements
         annual_base_rate=user_inputs['annual_base_rate'],
         mc_config=DEFAULT_CONFIG['monte_carlo']

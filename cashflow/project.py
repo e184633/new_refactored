@@ -131,9 +131,9 @@ class ProjectCashflow(BaseCashflowEngine):
         forecast_periods = self.date_processor.filter_periods_until_date(self.forecast_periods)
 
         max_tdc = self.cashflow_df.loc[dev_categories, 'Total'].sum()
-        # print('MAX TDC', max_tdc)
+
         max_tdc += self.cashflow_df.loc['Acquisition Total', 'Total']
-        max_tdc += self.cashflow_df.loc['Financing costs', 'Total']  * .5
+        max_tdc += self.cashflow_df.loc['Financing costs', 'Total'] * .5
 
         # Forecast standard fee for periods except the last
         fee = self.input_assumptions.get('Management Fee', 0.0)
@@ -177,7 +177,6 @@ class ProjectCashflow(BaseCashflowEngine):
         # Look for the "Additional Advertisement" row
         target_category = "Additional Advertisement"
         periods = self.date_processor.filter_periods('start_to_exit')
-        print("PERIODS ", len(periods), self.date_processor.start_date)
         # Calculate monthly cost
         monthly_cost = self.additional_advertisement_cost / len(periods) if self.forecast_periods_count > 0 else 0
 
@@ -185,49 +184,6 @@ class ProjectCashflow(BaseCashflowEngine):
         for period in periods:
             period_str = period.strftime('%b-%y')
             self.cashflow_df.loc[target_category, period_str] = -monthly_cost
-
-    # In cashflow/project.py, update the forecast_additional_unit_cost method:
-
-    def forecast_additional_unit_cost(self):
-        """Forecast additional unit cost across forecast periods."""
-        # Find the target category
-        target_category = "Additional"
-        for category in self.cashflow_df.index:
-            if "additional advertisement" in category.lower():
-                target_category = category
-                break
-
-        # Only forecast until exit date
-        # print(self.forecast_periods)
-        forecast_periods = self.date_processor.filter_periods(period_type='start_to_exit')
-        print(forecast_periods, self.date_processor.start_date, 'START_DATE')
-        # forecast_periods = self.forecast_periods
-        # Calculate monthly cost - ensure the full amount is distributed
-        monthly_cost = self.additional_advertisement_cost / len(forecast_periods) if len(forecast_periods) > 0 else 0
-
-        # Set all forecast periods to 0 first (to clear any existing values)
-        for period in self.forecast_periods:
-            period_str = period.strftime('%b-%y')
-            self.cashflow_df.loc[target_category, period_str] = 0.0
-
-        # Distribute across forecast periods
-        for period in forecast_periods:
-            period_str = period.strftime('%b-%y')
-            self.cashflow_df.loc[target_category, period_str] = -monthly_cost
-
-        # Explicitly calculate and set the forecast total (Jan-25 to Exit)
-        forecast_cols = [p.strftime('%b-%y') for p in forecast_periods]
-        forecast_total = sum(-monthly_cost for _ in forecast_periods)
-
-        # The name of the forecast total column
-        forecast_total_col = f"{self.date_processor.start_date.strftime('%b-%y')} to Exit"
-
-        # Set the forecast total directly
-        self.cashflow_df.loc[target_category, forecast_total_col] = forecast_total
-
-        # Set the grand total as well
-        historical_total = self.cashflow_df.loc[target_category, self.date_processor.overview_columns[0]]
-        self.cashflow_df.loc[target_category, 'Total'] = historical_total + forecast_total
 
     def calculate_totals(self):
         """Calculate category totals for each period."""
@@ -264,17 +220,14 @@ class ProjectCashflow(BaseCashflowEngine):
         self.forecast_other_costs()
         self.forecast_additional_advertisement_cost()
 
-        # Calculate interim totals
-        self.calculate_totals()
-
-        # Calculate management fee (needs totals)
-        self.forecast_management_fee()
-
         # Add financing costs from debt calculation
         self.populate_financing_costs()
 
         # Recalculate totals with management fee
         self.calculate_totals()
+
+        # Calculate management fee (needs totals)
+        self.forecast_management_fee()
 
         # Calculate period summaries
         self.calculate_all_period_totals()
