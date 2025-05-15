@@ -131,6 +131,49 @@ class EquityCashflow(BaseCashflowEngine):
         # This is a placeholder for future equity forecasting
         pass
 
+    def add_equity_injection_total(self):
+        """Add a total row for cumulative equity injection."""
+        # Get shareholder rows
+        shareholder_rows = []
+        shareholders = self.get_shareholder_names()
+
+        for idx, row in self.cashflow_df.iterrows():
+            if row['Category'] in shareholders:
+                shareholder_rows.append(idx)
+
+        if not shareholder_rows:
+            return
+
+        # Create total injection row
+        total_row = {"Category": "Total Equity Injection"}
+
+        # Initialize running total for each column
+        running_totals = {}
+        for col in self.cashflow_df.columns:
+            if col == "Category":
+                continue
+            running_totals[col] = 0.0
+
+        # Calculate cumulative totals
+        for col in self.cashflow_df.columns:
+            if col == "Category":
+                continue
+
+            # Add this period's values to running total
+            for idx in shareholder_rows:
+                val = self.cashflow_df.at[idx, col]
+                if isinstance(val, (int, float)):
+                    running_totals[col] += val
+
+            # Set the cumulative total for this column
+            total_row[col] = running_totals[col]
+
+        # Add the total injection row
+        self.cashflow_df = pd.concat(
+            [self.cashflow_df, pd.DataFrame([total_row])],
+            ignore_index=True
+        )
+
     def generate_cashflow(self):
         """Generate the complete equity cashflow."""
         # Reset the cashflow DataFrame
@@ -141,6 +184,9 @@ class EquityCashflow(BaseCashflowEngine):
 
         # Forecast equity (placeholder)
         self.forecast_equity()
+
+        # Add total equity injection row
+        self.add_equity_injection_total()
 
         # Calculate period totals for each row
         numerical_rows = []

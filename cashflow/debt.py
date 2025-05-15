@@ -297,6 +297,39 @@ class DebtCashflow(BaseCashflowEngine):
 
         return loan_section
 
+    def add_total_debt_cashflow(self):
+        """Add a total row that sums up both senior and mezzanine loan subtotals."""
+        # Find the subtotal rows for both loans
+        subtotal_rows = []
+        for idx, row in self.cashflow_df.iterrows():
+            if row['Category'] == 'Sub Total':
+                subtotal_rows.append(idx)
+
+        if len(subtotal_rows) < 2:  # We need both subtotals
+            return
+
+        # Create total debt cashflow row
+        total_row = {"Category": "Total Debt Cashflow"}
+        
+        for col in self.cashflow_df.columns:
+            if col == 'Category':
+                continue
+            
+            # Sum the subtotals for this column
+            total = 0.0
+            for idx in subtotal_rows:
+                val = self.cashflow_df.at[idx, col]
+                if isinstance(val, (int, float)):
+                    total += val
+            
+            total_row[col] = total
+
+        # Add the total row
+        self.cashflow_df = pd.concat(
+            [self.cashflow_df, pd.DataFrame([total_row])],
+            ignore_index=True
+        )
+
     def generate_cashflow(self):
         """Generate the complete debt cashflow."""
         # Reset the cashflow DataFrame
@@ -327,6 +360,9 @@ class DebtCashflow(BaseCashflowEngine):
             [self.cashflow_df, pd.DataFrame(coutts_section)],
             ignore_index=True
         )
+
+        # Add total debt cashflow row
+        self.add_total_debt_cashflow()
 
         # Clear overview columns for balance rows
         for idx, row in self.cashflow_df.iterrows():
