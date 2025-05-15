@@ -30,7 +30,7 @@ def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
 
     # Create tabs for different dashboard sections
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "Cashflow Analysis",
+        "Project Cashflow",
         "Debt Cashflow",
         "Equity Cashflow",
         "Monte Carlo Simulation",
@@ -64,14 +64,13 @@ def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
 
 
 def create_cashflow_analysis(cashflow_data: pd.DataFrame) -> None:
-    """  Create the cashflow analysis section of the dashboard."""
+    """Create the project cashflow section of the dashboard."""
     # Define the hierarchy based on the screenshot and CATEGORIES
     hierarchy = {
         'Acquisition Total': CATEGORIES['acquisition_components'],
         'Development': CATEGORIES['development_components'],
         'Financing costs': CATEGORIES['financing'],
         'Total Project Cashflow': CATEGORIES['total_project_components'],
-        # 'Capital Financing Costs': ['Operation'],
     }
 
     # Create a new DataFrame to display with hierarchical structure
@@ -96,7 +95,7 @@ def create_cashflow_analysis(cashflow_data: pd.DataFrame) -> None:
             display_df.loc[category] = cashflow_data.loc[category]
 
     # Detailed Cashflow Data with bold styling for main categories
-    st.subheader('Detailed Cashflow Data')
+    st.subheader('Project Cashflow')
 
     # Format the DataFrame for display
     styled_df = display_df.copy()

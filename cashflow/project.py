@@ -232,4 +232,4 @@ class ProjectCashflow(BaseCashflowEngine):
         # Calculate period summaries
         self.calculate_all_period_totals()
 
-        return self.cashflow_df.round(2)
+        return self.cashflow_df
