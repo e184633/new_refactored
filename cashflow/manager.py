@@ -120,5 +120,17 @@ class CashflowManager:
 
     def generate_equity_cashflow(self):
         """Generate equity cashflow."""
+        # Generate project cashflow if not already generated
+        if not hasattr(self, 'project_cashflow_df'):
+            self.project_cashflow_df = self.project_cashflow.generate_cashflow()
+
+        # Generate debt cashflow if not already generated
+        if not hasattr(self, 'debt_cashflow_df'):
+            self.debt_cashflow_df = self.debt_cashflow.generate_cashflow()
+
+        # Create equity cashflow with access to project and debt data
+        self.equity_cashflow.project_cashflow_df = self.project_cashflow_df
+        self.equity_cashflow.debt_cashflow_df = self.debt_cashflow_df
+
         self.equity_cashflow_df = self.equity_cashflow.generate_cashflow()
         return self.equity_cashflow_df

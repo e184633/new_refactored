@@ -8,7 +8,7 @@ DEFAULT_CONFIG = {
     "refinancing_date": datetime.strptime("Mar-24", "%b-%y"),
     "exit_date": datetime.strptime("Jun-25", "%b-%y"),
     "start_of_cash_payment": datetime.strptime("Jun-25", "%b-%y"),
-    "forecast_periods_count": 4,
+    "forecast_periods_count": 3,
 
     # Development costs configuration
     "additional_unit_cost": 830_000.0,

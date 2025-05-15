@@ -171,9 +171,6 @@ class ProjectCashflow(BaseCashflowEngine):
 
     def forecast_additional_advertisement_cost(self):
         """Forecast additional unit cost across forecast periods."""
-        # Determine target category
-        target_category = None
-
         # Look for the "Additional Advertisement" row
         target_category = "Additional Advertisement"
         periods = self.date_processor.filter_periods('start_to_exit')

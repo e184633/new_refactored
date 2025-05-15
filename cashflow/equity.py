@@ -174,7 +174,62 @@ class EquityCashflow(BaseCashflowEngine):
             ignore_index=True
         )
 
-    def generate_cashflow(self):
+    def add_required_equity(self):
+        """Add a row for Required Equity (Total Project Cashflow - Total Debt Cashflow)."""
+        if self.project_cashflow_df is None or self.debt_cashflow_df is None:
+            return
+
+        # Create required equity row
+        required_equity_row = {"Category": "Required Equity"}
+
+        # Find Total Project Cashflow in project cashflow
+        project_total = None
+        if "Total Project Cashflow" in self.project_cashflow_df.index:
+            project_total = self.project_cashflow_df.loc["Total Project Cashflow"]
+
+        # Find Total Debt Cashflow in debt cashflow
+        debt_total = None
+        for idx, row in self.debt_cashflow_df.iterrows():
+            if isinstance(row, pd.Series) and row.get("Category") == "Total Debt Cashflow":
+                debt_total = row
+                break
+
+        # Calculate required equity for each column
+        if project_total is not None and debt_total is not None:
+            for col in self.cashflow_df.columns:
+                if col == "Category":
+                    continue
+
+                # Get project cashflow value
+                project_value = 0.0
+                if col in project_total:
+                    project_value = project_total[col]
+                    if isinstance(project_value, str):
+                        try:
+                            project_value = float(project_value.replace('£', '').replace(',', ''))
+                        except:
+                            project_value = 0.0
+
+                # Get debt cashflow value
+                debt_value = 0.0
+                if col in debt_total:
+                    debt_value = debt_total[col]
+                    if isinstance(debt_value, str):
+                        try:
+                            debt_value = float(debt_value.replace('£', '').replace(',', ''))
+                        except:
+                            debt_value = 0.0
+
+                # Calculate required equity
+                required_equity_row[col] = project_value - debt_value
+
+        # Add the required equity row
+        self.cashflow_df = pd.concat(
+            [self.cashflow_df, pd.DataFrame([required_equity_row])],
+            ignore_index=True
+        )
+
+    def generate_cashflow(self, project_cashflow_df=None, debt_cashflow_df=None):
         """Generate the complete equity cashflow."""
         # Reset the cashflow DataFrame
         self.cashflow_df = self.initialise_dataframe(['Actual/Forecast'], include_category_col=True)
@@ -187,6 +242,14 @@ class EquityCashflow(BaseCashflowEngine):
 
         # Add total equity injection row
         self.add_equity_injection_total()
+
+        # Add required equity row if project and debt cashflows are available
+        self.add_required_equity()
+
+        print(project_cashflow_df, debt_cashflow_df)
+        # Calculate Required Equity if we have the necessary data
+        if project_cashflow_df is not None and debt_cashflow_df is not None:
+            self.calculate_required_equity(project_cashflow_df, debt_cashflow_df)
 
         # Calculate period totals for each row
         numerical_rows = []
