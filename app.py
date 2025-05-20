@@ -205,6 +205,16 @@ def main():
 
     # Generate both cashflows
     cashflow_df = cashflow_gen.generate_cashflow()
+
+    # Apply development cost adjustment
+    if user_inputs['development_cost_adjustment'] != 0:
+        adjustment = user_inputs['development_cost_adjustment']
+
+        cashflow_df.loc['Development', 'Total'] -= adjustment
+
+        # Adjust Total Project Cashflow similarly
+        if 'Total Project Cashflow' in cashflow_df.index:
+            cashflow_df.loc['Total Project Cashflow', 'Total'] -= adjustment
     debt_cashflow_df = cashflow_gen.generate_debt_cashflow()
     equity_cashflow_df = cashflow_gen.generate_equity_cashflow()
 

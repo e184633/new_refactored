@@ -47,6 +47,7 @@ def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
         # Create debt charts if data is available
         if not cashflow_generator.debt_cashflow_df.empty:
             create_debt_charts(cashflow_generator.debt_cashflow_df)
+
     with tab3:
         display_debt_cashflow(equity_cashflow_df)
 
