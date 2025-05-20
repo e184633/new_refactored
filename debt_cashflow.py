@@ -303,7 +303,7 @@ def create_debt_cashflow_table(senior_loan_df, mezzanine_loan_df):
     return pd.DataFrame(rows)[final_columns_order]
 
 
-def display_debt_cashflow(debt_df):
+def display_debt_cashflow(debt_df, button_key=None):
     """Display the debt cashflow table with consistent styling and no checkmarks."""
     st.subheader("Financing Cashflow")
     if debt_df.empty:
@@ -372,6 +372,15 @@ def display_debt_cashflow(debt_df):
 
     # Render
     st.markdown(html, unsafe_allow_html=True)
+    # Add a download button below
+    csv = debt_df.to_csv().encode('utf-8')
+    st.download_button(
+        label=f"Download {button_key.capitalize()} Cashflow as CSV",
+        data=csv,
+        file_name="debt_cashflow.csv",
+        mime="text/csv",
+        key=button_key
+    )
 
 
 def create_debt_charts(debt_df):

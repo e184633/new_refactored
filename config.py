@@ -55,12 +55,18 @@ DEFAULT_CONFIG = {
         # Profit Split assumptions
         "exit_amount": 79_500_000,
 
+
     },
 
     # Budget data
     "proposed_budget_data": {
         "pre_antvic_budget": 2_124_436,
         "revised_budget": 21_620_551
+    },
+    "financing_type": {
+        "Equity (SAV)": 0.085,
+        "Equity": 0.0850,
+        "Loan": 0.1200,
     },
     # Shareholder names
     "shareholder_names": ["Shareholder Capital: SAV", "Shareholder Capital: FGC", "Shareholder Capital: FGC2"],

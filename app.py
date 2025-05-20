@@ -169,12 +169,55 @@ def create_input_form(default_config: dict) -> dict:
                 key="unexpected_costs"
             )
 
+    # Financing Types Section
+    with st.sidebar.expander("Financing Types"):
+        # Create individual fields for each financing type
+        equity_rate = st.number_input(
+            "Equity Rate",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.0850,  # Hard-coded default
+            step=0.001,
+            format="%.4f",
+            key="financing_equity"
+        )
+        st.text(f"Formatted: {equity_rate:.2%}")
+
+        loan_rate = st.number_input(
+            "Loan Rate",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.1200,  # Hard-coded default
+            step=0.001,
+            format="%.4f",
+            key="financing_loan"
+        )
+        st.text(f"Formatted: {loan_rate:.2%}")
+
+        # Manually create the financing_type dictionary
+        financing_types = {
+            "Equity": equity_rate,
+            "Loan": loan_rate
+        }
+
+        # # Add exit amount parameter
+        # exit_amount = st.number_input(
+        #     "Exit Amount (£)",
+        #     min_value=0.0,
+        #     value=79_500_000,  # Hard-coded default
+        #     step=100000.0,
+        #     format="%.0f",
+        #     key="exit_amount"
+        # )
+        # st.text(f"Formatted: £{exit_amount:,.0f}")
     return {
         "acquisition_date": acquisition_date,
         "start_date": start_date,
         "end_date": exit_date,
         "forecast_periods_count": forecast_periods_count,
         "input_assumptions": input_assumptions,
+        # "financing_type": financing_types,  # Add the financing types
+        # "exit_amount": exit_amount,  # Add exit amount
         "proposed_budget_data": proposed_budget_data,
         "additional_unit_cost": additional_unit_cost,
         "development_cost_adjustment": development_cost_adjustment,
@@ -225,10 +268,10 @@ def main():
         cashflow_df,
         debt_cashflow_df=debt_cashflow_df,
         equity_cashflow_df=equity_cashflow_df,
+        equity_split_data=equity_split_data,
         cashflow_generator=cashflow_gen,  # Pass the generator instead of loan statements
         annual_base_rate=user_inputs['annual_base_rate'],
         mc_config=DEFAULT_CONFIG['monte_carlo'],
-        equity_split_data=equity_split_data
     )
 
 

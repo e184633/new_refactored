@@ -195,10 +195,6 @@ class ProjectCashflow(BaseCashflowEngine):
                 CATEGORIES['acquisition_components'], period_str
             ].sum()
 
-            # Project total
-            self.cashflow_df.loc['Total Project Cashflow', period_str] = self.cashflow_df.loc[
-                CATEGORIES['total_project_components'], period_str
-            ].sum()
 
             # Total Development Costs
             self.cashflow_df.loc['Total Development Costs', period_str] = (
@@ -206,6 +202,9 @@ class ProjectCashflow(BaseCashflowEngine):
                     self.cashflow_df.loc['Financing costs', period_str] +
                     self.cashflow_df.loc['Acquisition Total', period_str]
             )
+            # Project total
+            self.cashflow_df.loc['Total Project Cashflow', period_str] = self.cashflow_df.loc[
+                'Total Development Costs', period_str]
 
     def generate_cashflow(self):
         """Generate the complete project cashflow."""

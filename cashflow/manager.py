@@ -96,6 +96,7 @@ class CashflowManager:
                         equity_split[shareholder] = (value / total_equity) * 100
 
         return equity_split
+
     def calculate_combined_financing_costs(self):
         """Calculate combined financing costs from both loans for each period."""
         financing_costs = {}

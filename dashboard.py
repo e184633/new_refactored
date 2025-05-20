@@ -46,17 +46,20 @@ def add_return_summary_tab(summary_calculator):
     with col3:
         pass
 
+
 def add_profit_split_tab(summary_calculator, equity_split_data):
-        """Add the profit split tab using the calculator."""
-        st.subheader("Profit Split")
+    """Add the profit split tab using the calculator."""
+    st.subheader("Profit Split")
 
-        # Example: Display profit calculation
-        profit = summary_calculator.get_profit()
-        st.write(f"### Total Profit: £{profit:,.0f}")
+    # Example: Display profit calculation
+    profit = summary_calculator.get_profit()
+    st.write(f"### Total Profit: £{profit:,.0f}")
 
-        # Here you'll add the profit split logic using both the summary_calculator
-        # and equity_split_data
-        # ...
+    # Here you'll add the profit split logic using both the summary_calculator
+    # and equity_split_data
+    # ...
+
+
 def display_equity_split(equity_split_data):
     """Display a compact visualization of equity split percentages."""
     if not equity_split_data:
@@ -72,9 +75,11 @@ def display_equity_split(equity_split_data):
         # Convert to DataFrame for a clean tabular display
         table_data = {
             "Shareholder": list(equity_split_data.keys()),
-            "Percentage": [f"{percentage:.1f}%" for percentage in equity_split_data.values()]
+            "Percentage": [f"{percentage:.1f}%" for percentage in equity_split_data.values()],
+            "Financing rate": [f"{percentage * 100:.1f}%" for percentage in DEFAULT_CONFIG['financing_type'].values()]
         }
         split_df = pd.DataFrame(table_data)
+        split_df.set_index('Shareholder', inplace=True)
         st.table(split_df)  # Using st.table for a static display without sorting
 
     # Add a pie chart visualization in the second column
@@ -93,9 +98,10 @@ def display_equity_split(equity_split_data):
         )
         st.plotly_chart(fig, use_container_width=False)
 
+
 def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
                      annual_base_rate: float = 0.001, debt_cashflow_df=None, equity_cashflow_df=None,
-                     mc_config: dict = None, equity_split_data=None) -> None:
+                     mc_config: dict = None, equity_split_data=None, cash_balance_calculator=None) -> None:
     """Create the Streamlit dashboard with cashflow data and Monte Carlo simulations."""
     st.title('Cashflow Analysis Dashboard')
     summary_calculator = ReturnSummaryCalculator(cashflow_data, DEFAULT_CONFIG)
@@ -115,18 +121,23 @@ def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
 
     with tab2:
         # Use the debt cashflow from the generator instead of creating it here
-        display_debt_cashflow(debt_cashflow_df)
+        display_debt_cashflow(debt_cashflow_df, button_key="debt")
 
         # Create debt charts if data is available
         if not cashflow_generator.debt_cashflow_df.empty:
             create_debt_charts(cashflow_generator.debt_cashflow_df)
 
+
     with tab3:
-        display_debt_cashflow(equity_cashflow_df)
+        display_debt_cashflow(equity_cashflow_df, button_key='equity')
         if equity_split_data:
             display_equity_split(equity_split_data)
+        # Add a download button below
+
+
     with tab4:
         add_return_summary_tab(summary_calculator)
+
     with tab5:
         if mc_config:
             create_monte_carlo_analysis(cashflow_data, mc_config)
@@ -245,12 +256,11 @@ def create_cashflow_analysis(cashflow_data: pd.DataFrame, equity_split_data=None
 
     html += '</table>'
     html += '</div>'
-
+    # st.dataframe(cashflow_data)
     st.markdown(html, unsafe_allow_html=True)
-    st.subheader('Download Cashflow Table')
     csv = cashflow_data.to_csv(index=True)
     st.download_button(
-        label="Download Cashflow as CSV",
+        label="Download Project Cashflow as CSV",
         data=csv,
         file_name="cashflow_table.csv",
         mime="text/csv",
