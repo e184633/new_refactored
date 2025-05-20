@@ -8,6 +8,8 @@ from config import DEFAULT_CONFIG
 from monte_carlo import run_monte_carlo_simulation, create_simulation_plots
 from utils import format_cf_value
 from debt_cashflow import display_debt_cashflow, create_debt_charts
+from cashflow.return_summary import ReturnSummaryCalculator
+
 SAV_DATE_FORMAT = '%b-%y'
 
 OVERVIEW_COLUMNS = [f"Inception to {DEFAULT_CONFIG['cutoff_date'].strftime(SAV_DATE_FORMAT)}",
@@ -23,32 +25,38 @@ ANTVIC_STR = 'antvic'
 QUARTERLY_MONTH_INDEX = 2  # Third month in quarter (0-based index)
 
 
-def display_equity_split(equity_split_data):
-    """Display a compact visualization of equity split percentages."""
-    if not equity_split_data:
-        return
+def add_return_summary_tab(summary_calculator):
+    """Add the return summary tab using the calculator."""
+    st.subheader("Return Summary")
 
-    st.subheader("Equity Split (% of Total)")
+    # Create three columns for the layout
+    col1, col2, col3 = st.columns(3)
 
-    # Create a clean, compact table
-    cols = st.columns(len(equity_split_data))
-    for i, (shareholder, percentage) in enumerate(equity_split_data.items()):
-        with cols[i]:
-            st.metric(
-                label=shareholder,
-                value=f"{percentage:.1f}%"
-            )
+    # Exit Value table
+    with col1:
+        st.write("### Exit Value")
+        st.table(summary_calculator.get_exit_value_df())
 
-    # Add a pie chart visualization
-    fig = px.pie(
-        values=list(equity_split_data.values()),
-        names=list(equity_split_data.keys()),
-        title="Equity Split",
-        hole=0.4,  # Makes it a donut chart
-    )
-    fig.update_traces(textposition='inside', textinfo='percent+label')
-    fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=0))
-    st.plotly_chart(fig, use_container_width=True)
+    # Costs table
+    with col2:
+        st.write("### Costs")
+        st.table(summary_calculator.get_costs_df())
+
+    # Third column left empty for now
+    with col3:
+        pass
+
+def add_profit_split_tab(summary_calculator, equity_split_data):
+        """Add the profit split tab using the calculator."""
+        st.subheader("Profit Split")
+
+        # Example: Display profit calculation
+        profit = summary_calculator.get_profit()
+        st.write(f"### Total Profit: £{profit:,.0f}")
+
+        # Here you'll add the profit split logic using both the summary_calculator
+        # and equity_split_data
+        # ...
 def display_equity_split(equity_split_data):
     """Display a compact visualization of equity split percentages."""
     if not equity_split_data:
@@ -90,12 +98,14 @@ def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
                      mc_config: dict = None, equity_split_data=None) -> None:
     """Create the Streamlit dashboard with cashflow data and Monte Carlo simulations."""
     st.title('Cashflow Analysis Dashboard')
+    summary_calculator = ReturnSummaryCalculator(cashflow_data, DEFAULT_CONFIG)
 
     # Create tabs for different dashboard sections
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "Project Cashflow",
         "Debt Cashflow",
         "Equity Cashflow",
+        "Return Summary",
         "Monte Carlo Simulation",
         "Profit Analysis"
     ])
@@ -115,14 +125,15 @@ def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
         display_debt_cashflow(equity_cashflow_df)
         if equity_split_data:
             display_equity_split(equity_split_data)
-
     with tab4:
+        add_return_summary_tab(summary_calculator)
+    with tab5:
         if mc_config:
             create_monte_carlo_analysis(cashflow_data, mc_config)
         else:
             st.warning("Monte Carlo simulation configuration not provided.")
 
-    with tab5:
+    with tab6:
         if mc_config and 'profit_details' in mc_config:
             create_profit_analysis(cashflow_data, mc_config['profit_details'])
         else:

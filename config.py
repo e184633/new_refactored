@@ -10,6 +10,7 @@ DEFAULT_CONFIG = {
     "start_of_cash_payment": datetime.strptime("Jun-25", "%b-%y"),
     "forecast_periods_count": 3,
 
+
     # Development costs configuration
     "additional_unit_cost": 830_000.0,
     "additional_advertisement_cost": 200_000,
@@ -51,6 +52,8 @@ DEFAULT_CONFIG = {
         "Senior IMS Rate": 0.0005,  # 0.05% on senior loan
         "Mezzanine IMS Rate": 0.0005,  # 0.05% on mezzanine loan
 
+        # Profit Split assumptions
+        "exit_amount": 79_500_000,
 
     },
 
