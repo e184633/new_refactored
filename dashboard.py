@@ -23,8 +23,71 @@ ANTVIC_STR = 'antvic'
 QUARTERLY_MONTH_INDEX = 2  # Third month in quarter (0-based index)
 
 
+def display_equity_split(equity_split_data):
+    """Display a compact visualization of equity split percentages."""
+    if not equity_split_data:
+        return
+
+    st.subheader("Equity Split (% of Total)")
+
+    # Create a clean, compact table
+    cols = st.columns(len(equity_split_data))
+    for i, (shareholder, percentage) in enumerate(equity_split_data.items()):
+        with cols[i]:
+            st.metric(
+                label=shareholder,
+                value=f"{percentage:.1f}%"
+            )
+
+    # Add a pie chart visualization
+    fig = px.pie(
+        values=list(equity_split_data.values()),
+        names=list(equity_split_data.keys()),
+        title="Equity Split",
+        hole=0.4,  # Makes it a donut chart
+    )
+    fig.update_traces(textposition='inside', textinfo='percent+label')
+    fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=0))
+    st.plotly_chart(fig, use_container_width=True)
+def display_equity_split(equity_split_data):
+    """Display a compact visualization of equity split percentages."""
+    if not equity_split_data:
+        return
+
+    st.subheader("Equity Split (% of Total)")
+
+    # Create a two-column layout
+    col1, col2, col3 = st.columns([1, 1, 1])  # 1:2 ratio gives more space to the chart
+
+    # Create a vertical table in the first column
+    with col1:
+        # Convert to DataFrame for a clean tabular display
+        table_data = {
+            "Shareholder": list(equity_split_data.keys()),
+            "Percentage": [f"{percentage:.1f}%" for percentage in equity_split_data.values()]
+        }
+        split_df = pd.DataFrame(table_data)
+        st.table(split_df)  # Using st.table for a static display without sorting
+
+    # Add a pie chart visualization in the second column
+    with col2:
+        fig = px.pie(
+            values=list(equity_split_data.values()),
+            names=list(equity_split_data.keys()),
+            # title="Equity Split",
+            hole=0.4,  # Makes it as donut chart
+            width=500, height=500
+        )
+        fig.update_traces(textposition='inside', textinfo='percent+label')
+        fig.update_layout(
+            # legend=dict(orientation="h", yanchor="bottom", y=0),
+            margin=dict(t=0, b=0, l=0, r=0)  # Tighter margins
+        )
+        st.plotly_chart(fig, use_container_width=False)
+
 def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
-                     annual_base_rate: float = 0.001, debt_cashflow_df=None, equity_cashflow_df=None,  mc_config: dict = None) -> None:
+                     annual_base_rate: float = 0.001, debt_cashflow_df=None, equity_cashflow_df=None,
+                     mc_config: dict = None, equity_split_data=None) -> None:
     """Create the Streamlit dashboard with cashflow data and Monte Carlo simulations."""
     st.title('Cashflow Analysis Dashboard')
 
@@ -50,6 +113,8 @@ def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
 
     with tab3:
         display_debt_cashflow(equity_cashflow_df)
+        if equity_split_data:
+            display_equity_split(equity_split_data)
 
     with tab4:
         if mc_config:
@@ -64,7 +129,7 @@ def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
             st.warning("Profit details not provided in the configuration.")
 
 
-def create_cashflow_analysis(cashflow_data: pd.DataFrame) -> None:
+def create_cashflow_analysis(cashflow_data: pd.DataFrame, equity_split_data=None) -> None:
     """Create the project cashflow section of the dashboard."""
     # Define the hierarchy based on the screenshot and CATEGORIES
     hierarchy = {

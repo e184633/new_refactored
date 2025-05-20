@@ -74,6 +74,28 @@ class CashflowManager:
         self.end_date = end_date
         self.annual_base_rate = annual_base_rate
 
+    def calculate_equity_split_percentages(self):
+        """Calculate equity split percentages for visualization."""
+        equity_split = {}
+        shareholders = self.equity_cashflow.get_shareholder_names()
+
+        # Look for shareholder rows and total equity in equity_cashflow_df
+        total_equity = 0
+        for idx, row in self.equity_cashflow_df.iterrows():
+            if row['Category'] == 'Total Shareholder Capital' and 'Total' in self.equity_cashflow_df.columns:
+                total_value = row['Total']
+                if isinstance(total_value, (float, int)):
+                    total_equity = total_value
+
+        # Get each shareholder's total
+        for shareholder in shareholders:
+            for idx, row in self.equity_cashflow_df.iterrows():
+                if row['Category'] == shareholder and 'Total' in self.equity_cashflow_df.columns:
+                    value = row['Total']
+                    if isinstance(value, (float, int)) and total_equity > 0:
+                        equity_split[shareholder] = (value / total_equity) * 100
+
+        return equity_split
     def calculate_combined_financing_costs(self):
         """Calculate combined financing costs from both loans for each period."""
         financing_costs = {}
@@ -133,4 +155,5 @@ class CashflowManager:
         self.equity_cashflow.debt_cashflow_df = self.debt_cashflow_df
 
         self.equity_cashflow_df = self.equity_cashflow.generate_cashflow()
+        self.equity_split_data = self.calculate_equity_split_percentages()
         return self.equity_cashflow_df

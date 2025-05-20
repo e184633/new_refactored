@@ -174,7 +174,7 @@ CATEGORIES = {
     ],
     "development_components": [
         "Accountancy", "Planning & Design", "Development costs", "Legal & Professional",
-        "Management Fee", "Insurance", "Operation", "VAT", "Additional Advertisement",
+        "Management Fee", "Insurance", "Operation", "VAT", "Additional Advertisement"
     ],
     "acquisition_components": [
         "Acquisition",

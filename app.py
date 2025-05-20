@@ -215,8 +215,10 @@ def main():
         # Adjust Total Project Cashflow similarly
         if 'Total Project Cashflow' in cashflow_df.index:
             cashflow_df.loc['Total Project Cashflow', 'Total'] -= adjustment
+        cashflow_gen.project_cashflow_df = cashflow_df
     debt_cashflow_df = cashflow_gen.generate_debt_cashflow()
     equity_cashflow_df = cashflow_gen.generate_equity_cashflow()
+    equity_split_data = cashflow_gen.equity_split_data if hasattr(cashflow_gen, 'equity_split_data') else {}
 
     # Pass the generator to the dashboard
     create_dashboard(
@@ -225,7 +227,8 @@ def main():
         equity_cashflow_df=equity_cashflow_df,
         cashflow_generator=cashflow_gen,  # Pass the generator instead of loan statements
         annual_base_rate=user_inputs['annual_base_rate'],
-        mc_config=DEFAULT_CONFIG['monte_carlo']
+        mc_config=DEFAULT_CONFIG['monte_carlo'],
+        equity_split_data=equity_split_data
     )
 
 
