@@ -227,7 +227,20 @@ class DebtCashflow(BaseCashflowEngine):
         cash_row = LoanProcessor.calculate_cash_payments(
             loan_df, self.date_processor
         )
-        loan_section.append(cash_row)
+        # Look for existing Cash Payment row to update
+        cash_payment_found = False
+        for i, row in enumerate(loan_section):
+            if row["Category"] == "Cash Payment":
+                # Update existing row instead of adding a new one
+                for col in cash_row:
+                    if col != "Category":
+                        loan_section[i][col] = cash_row[col]
+                cash_payment_found = True
+                break
+
+        # If Cash Payment row wasn't found, append it
+        if not cash_payment_found:
+            loan_section.append(cash_row)
 
         # Handle refinancing if needed
         if refinancing_date:
@@ -240,7 +253,7 @@ class DebtCashflow(BaseCashflowEngine):
                 loan_df, self.date_processor
             )
 
-            # Add redemption row for refinancing date
+            # Calculate redemption row for refinancing date
             redemption_row = {"Category": "Loan Redemption"}
             for col in self.date_processor.monthly_period_strs:
                 try:
@@ -265,7 +278,20 @@ class DebtCashflow(BaseCashflowEngine):
             for col in self.date_processor.overview_columns:
                 redemption_row[col] = ""
 
-            loan_section.append(redemption_row)
+            # Look for existing Loan Redemption row to update
+            redemption_found = False
+            for i, row in enumerate(loan_section):
+                if row["Category"] == "Loan Redemption":
+                    # Update existing row instead of adding a new one
+                    for col, value in redemption_row.items():
+                        if col != "Category":
+                            loan_section[i][col] = value
+                    redemption_found = True
+                    break
+
+            # Only append if we didn't find an existing row to update
+            if not redemption_found:
+                loan_section.append(redemption_row)
 
         # Calculate subtotal
         subtotal_row = {"Category": "Sub Total"}
