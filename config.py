@@ -8,6 +8,7 @@ DEFAULT_CONFIG = {
     "refinancing_date": datetime.strptime("Mar-24", "%b-%y"),
     "exit_date": datetime.strptime("Jun-25", "%b-%y"),
     "start_of_cash_payment": datetime.strptime("Jun-25", "%b-%y"),
+    "construction_end_date": datetime.strptime("Apr-25", "%b-%y"),
     "forecast_periods_count": 3,
 
 

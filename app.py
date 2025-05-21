@@ -1,3 +1,6 @@
+import copy
+import json
+
 import pandas as pd
 import streamlit as st
 from dateutil.relativedelta import relativedelta
@@ -101,6 +104,21 @@ def create_input_form(default_config: dict) -> dict:
                 value=default_config["forecast_periods_count"],
                 step=1,
                 key="periods")
+        col5, col6 = st.columns(2)
+        with col3:
+            start_of_cash_payment = st.date_input(
+                "Cash Payments Start Date",
+                min_value=datetime(2000, 1, 1),  # Optional: set minimum date
+                max_value=datetime(2030, 12, 31),  # Optional: set maximum date
+                value=default_config["start_of_cash_payment"],
+                key="start_of_cash_payment")
+        with col4:
+            construction_end_date = st.date_input(
+                "Construction End Date",
+                min_value=datetime(2000, 1, 1),  # Optional: set minimum date
+                max_value=datetime(2030, 12, 31),  # Optional: set maximum date
+                value=default_config["construction_end_date"],
+                key="construction_end_date")
 
     # Input Assumptions
     with st.sidebar.expander("Input Assumptions (£)"):
@@ -214,6 +232,8 @@ def create_input_form(default_config: dict) -> dict:
         "acquisition_date": acquisition_date,
         "start_date": start_date,
         "end_date": exit_date,
+        "start_of_cash_payment": start_of_cash_payment,
+        "construction_end_date": construction_end_date,
         "forecast_periods_count": forecast_periods_count,
         "input_assumptions": input_assumptions,
         # "financing_type": financing_types,  # Add the financing types
@@ -231,13 +251,73 @@ def load_loan_statement(file_path: str, loan_name: str):
     return bank_statement[bank_statement.SOURCE == loan_name]
 
 
+def add_config_upload_download():
+    """Add config download and upload functionality to sidebar."""
+    st.sidebar.markdown("### Configuration Management")
+
+    # Download current config
+    if st.sidebar.button("Download Config File"):
+        try:
+            # Read the config.py file directly
+            with open('config.py', 'r') as file:
+                config_content = file.read()
+
+            # Create download button
+            st.sidebar.download_button(
+                label="Save Config File",
+                data=config_content,
+                file_name="config.py",
+                mime="text/plain",
+                key="download_config"
+            )
+        except Exception as e:
+            st.sidebar.error(f"Error reading config file: {e}")
+
+    # Upload config
+    uploaded_file = st.sidebar.file_uploader("Upload Config File", type=["py"])
+    if uploaded_file is not None:
+        try:
+            # Read uploaded content
+            config_content = uploaded_file.read().decode('utf-8')
+
+            # Create a namespace to execute the code
+            namespace = {
+                'datetime': datetime,
+                'pd': pd,
+                'relativedelta': relativedelta
+            }
+
+            # Execute the code in the namespace
+            exec(config_content, namespace)
+
+            # Extract the DEFAULT_CONFIG from the namespace
+            if 'DEFAULT_CONFIG' in namespace:
+                uploaded_config = namespace['DEFAULT_CONFIG']
+                st.sidebar.success("Config loaded successfully!")
+                return uploaded_config
+            else:
+                st.sidebar.error("Uploaded file doesn't contain DEFAULT_CONFIG.")
+
+        except Exception as e:
+            st.sidebar.error(f"Error loading config: {e}")
+
+    # Return None if no upload or if there was an error
+    return None
+
+
 def main():
     file_path = 'SAV Fund & Projects - Reconciliation - 2025.03.xlsx'
     bank_statement_df = load_bank_statement(file_path)
     senior_loan_statement_df = load_loan_statement(file_path, loan_name='OakNorth Loan Account')
     mezzanine_loan_statement_df = load_loan_statement(file_path, loan_name='Coutts Loan Account')
-    user_inputs = create_input_form(DEFAULT_CONFIG)
+    # Add config upload/download functionality and get updated config
+    # updated_config = add_config_upload_download(DEFAULT_CONFIG)
+    uploaded_config = add_config_upload_download()
+    config_to_use = uploaded_config if uploaded_config is not None else DEFAULT_CONFIG
 
+    # add_config_download()
+    # user_inputs = create_input_form(DEFAULT_CONFIG)
+    user_inputs = create_input_form(config_to_use)
     # Create integrated CashflowGenerator instance
     cashflow_gen = CashflowGenerator(
         bank_statement_df=bank_statement_df,

@@ -47,8 +47,6 @@ class ProjectCashflow(BaseCashflowEngine):
     def populate_historical_costs(self):
         """Populate historical costs from bank statement data."""
         for period in self.date_processor.all_periods:
-            if period > self.date_processor.start_date:
-                continue
 
             period_str = period.strftime('%b-%y')
             for category in CATEGORIES['historical']:

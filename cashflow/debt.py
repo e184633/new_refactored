@@ -168,13 +168,18 @@ class DebtCashflow(BaseCashflowEngine):
             end_date,
             annual_base_rate,
             forecast_periods_count,
+            additional_unit_cost,
+            start_of_cash_payment,
+            construction_end_date,
     ):
         super().__init__(acquisition_date, start_date, end_date, forecast_periods_count=forecast_periods_count)
 
         self.senior_loan_statement = senior_loan_statement_df
         self.mezzanine_loan_statement = mezzanine_loan_statement_df
         self.annual_base_rate = annual_base_rate
-
+        self.additional_unit_cost = additional_unit_cost
+        self.construction_end_date = construction_end_date
+        self.start_of_cash_payment = start_of_cash_payment
         # Initialize the DataFrame with Category column
         self.cashflow_df = self.initialise_dataframe(
             ['Actual/Forecast'],
@@ -320,8 +325,62 @@ class DebtCashflow(BaseCashflowEngine):
 
         loan_section.append(opening_row)
         loan_section.append(closing_row)
+        self.forecast_development_loan(loan_section, loan_key, refinancing_date)
 
         return loan_section
+
+    def forecast_development_loan(self, loan_section, loan_key, refinancing_date=None):
+        """
+        Corrects development values in the mezzanine loan for periods between refinancing and cash payment.
+        Modifies loan_section in place without adding new rows.
+        """
+        # Only apply to mezzanine loan after refinancing
+        if loan_key != 'mezzanine_loan' or not refinancing_date:
+            return  # Early return if not applicable
+
+        # Use class attributes for these values
+        additional_unit_cost = self.additional_unit_cost
+        end_of_construction_date = self.construction_end_date
+        cash_payment_start_date = self.start_of_cash_payment
+
+        # Calculate number of periods deterministically: from start date to construction end
+        construction_periods = pd.date_range(
+            start=self.date_processor.start_date,
+            end=end_of_construction_date,
+            freq='ME'
+        )
+
+        num_periods = len(construction_periods)
+
+        # Calculate additional cost per period (deterministic)
+        additional_cost_per_period = additional_unit_cost / num_periods if num_periods > 0 else 0
+
+        # Get development costs from project cashflow
+        development_costs = {}
+        if hasattr(self, 'project_cashflow_df') and self.project_cashflow_df is not None:
+            for col in self.project_cashflow_df.columns:
+                if col in self.date_processor.monthly_period_strs:
+                    development_costs[col] = self.project_cashflow_df.loc['Development', col]
+
+
+        # Find development-related rows in loan section
+        development_row_indices = [
+            i for i, row in enumerate(loan_section)
+            if row["Category"] in ["Development"]
+        ]
+
+        # Apply adjustments to the relevant rows
+        for idx in development_row_indices:
+            for col in self.date_processor.monthly_period_strs:
+                try:
+                    period_dt = datetime.strptime(col, '%b-%y')
+                    # Only adjust values in the specified period range
+                    if (refinancing_date.date() <= period_dt.date() <= cash_payment_start_date.date()):
+                        # Set value to project development cost + additional cost portion
+                        dev_value = development_costs.get(col, 0)
+                        loan_section[idx][col] = dev_value + additional_cost_per_period
+                except ValueError:
+                    continue
 
     def add_total_debt_cashflow(self):
         """Add a total row that sums up both senior and mezzanine loan subtotals."""

@@ -19,6 +19,8 @@ class CashflowManager:
             acquisition_date,
             start_date,
             end_date,
+            start_of_cash_payment,
+            construction_end_date,
 
             # Forecast configuration
             forecast_periods_count,
@@ -56,6 +58,9 @@ class CashflowManager:
             end_date=end_date,
             annual_base_rate=annual_base_rate,
             forecast_periods_count=forecast_periods_count,
+            additional_unit_cost=additional_unit_cost,
+            start_of_cash_payment=start_of_cash_payment,
+            construction_end_date=construction_end_date,
         )
         # Create equity cashflow processor
         self.equity_cashflow = EquityCashflow(
