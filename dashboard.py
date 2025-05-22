@@ -47,19 +47,6 @@ def add_return_summary_tab(summary_calculator):
         pass
 
 
-def add_profit_split_tab(summary_calculator, equity_split_data):
-    """Add the profit split tab using the calculator."""
-    st.subheader("Profit Split")
-
-    # Example: Display profit calculation
-    profit = summary_calculator.get_profit()
-    st.write(f"### Total Profit: £{profit:,.0f}")
-
-    # Here you'll add the profit split logic using both the summary_calculator
-    # and equity_split_data
-    # ...
-
-
 def display_equity_split(equity_split_data):
     """Display a compact visualization of equity split percentages."""
     if not equity_split_data:
@@ -97,58 +84,6 @@ def display_equity_split(equity_split_data):
             margin=dict(t=0, b=0, l=0, r=0)  # Tighter margins
         )
         st.plotly_chart(fig, use_container_width=False)
-
-
-def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
-                     annual_base_rate: float = 0.001, debt_cashflow_df=None, equity_cashflow_df=None,
-                     mc_config: dict = None, equity_split_data=None, cash_balance_calculator=None) -> None:
-    """Create the Streamlit dashboard with cashflow data and Monte Carlo simulations."""
-    st.title('Cashflow Analysis Dashboard')
-    summary_calculator = ReturnSummaryCalculator(cashflow_data, DEFAULT_CONFIG)
-
-    # Create tabs for different dashboard sections
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "Project Cashflow",
-        "Debt Cashflow",
-        "Equity Cashflow",
-        "Return Summary",
-        "Monte Carlo Simulation",
-        "Profit Analysis"
-    ])
-
-    with tab1:
-        create_cashflow_analysis(cashflow_data)
-
-    with tab2:
-        # Use the debt cashflow from the generator instead of creating it here
-        display_debt_cashflow(debt_cashflow_df, button_key="debt")
-
-        # Create debt charts if data is available
-        if not cashflow_generator.debt_cashflow_df.empty:
-            create_debt_charts(cashflow_generator.debt_cashflow_df)
-
-
-    with tab3:
-        display_debt_cashflow(equity_cashflow_df, button_key='equity')
-        if equity_split_data:
-            display_equity_split(equity_split_data)
-        # Add a download button below
-
-
-    with tab4:
-        add_return_summary_tab(summary_calculator)
-
-    with tab5:
-        if mc_config:
-            create_monte_carlo_analysis(cashflow_data, mc_config)
-        else:
-            st.warning("Monte Carlo simulation configuration not provided.")
-
-    with tab6:
-        if mc_config and 'profit_details' in mc_config:
-            create_profit_analysis(cashflow_data, mc_config['profit_details'])
-        else:
-            st.warning("Profit details not provided in the configuration.")
 
 
 def create_cashflow_analysis(cashflow_data: pd.DataFrame, equity_split_data=None) -> None:
@@ -690,3 +625,330 @@ def create_profit_analysis(cashflow_data, profit_details: dict) -> None:
 
     # Display the waterfall chart
     st.plotly_chart(fig, use_container_width=True)
+
+
+def add_profit_split_tab(summary_calculator, equity_split_data, equity_cashflow_df, cashflow_generator):
+    """Add the profit split tab with Tier 1/Tier 2 structure matching the CSV."""
+    st.subheader("Profit Split Analysis")
+    st.write("Following the **Tier 1 Preferential Entitlement BoP** and **Tier 2** distribution structure")
+
+    # Import the ProfitSplitCalculator
+    from cashflow.return_summary import ProfitSplitCalculator
+
+    # Create profit split calculator
+    profit_calculator = ProfitSplitCalculator(
+        equity_cashflow_df=equity_cashflow_df,
+        config=DEFAULT_CONFIG,
+        date_processor=cashflow_generator.project_cashflow.date_processor
+    )
+
+    # Get total profit from summary calculator
+    total_profit = summary_calculator.get_profit()
+
+    # Calculate complete profit distribution
+    final_distribution, tier1_results, total_tier1, remaining_profit = profit_calculator.calculate_total_profit_distribution(
+        total_profit)
+
+    # Display key parameters
+    st.subheader("Key Investment Parameters")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.write("**Tier 1 Preferential Rates:**")
+        st.write("• SAV: 8.5%")
+        st.write("• FGC: 8.5%")
+        st.write("• FGC2: 12.0%")
+
+    with col2:
+        st.write("**Tier 2 Promote:**")
+        st.write("• Threshold: 0.0%")
+        st.write("• Promote: 25.0%")
+
+    with col3:
+        st.write("**Catch-up:**")
+        st.write("• Yes")
+
+    # Display summary metrics
+    st.subheader("Distribution Summary")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric(
+            "Total Profit",
+            f"£{total_profit:,.0f}",
+            help="Net sale price minus total development costs"
+        )
+
+    with col2:
+        st.metric(
+            "Tier 1 Entitlements",
+            f"£{total_tier1:,.0f}",
+            help="Total preferential entitlements across all shareholders"
+        )
+
+    with col3:
+        st.metric(
+            "Remaining for Tier 2",
+            f"£{remaining_profit:,.0f}",
+            help="Profit remaining after Tier 1 entitlements"
+        )
+
+    with col4:
+        tier1_percentage = (total_tier1 / total_profit * 100) if total_profit > 0 else 0
+        st.metric(
+            "Tier 1 %",
+            f"{tier1_percentage:.1f}%",
+            help="Percentage of total profit going to Tier 1"
+        )
+
+    # Display Tier 1 Preferential Entitlement detailed tables
+    st.subheader("Tier 1 Preferential Entitlement BoP")
+
+    # Create tabs for different components
+    tier1_tab1, tier1_tab2, tier1_tab3, tier1_tab4 = st.tabs([
+        "Beginning of Period", "Monthly Additions", "Monthly Accruals", "End of Period"
+    ])
+
+    with tier1_tab1:
+        st.write("**Tier 1 Pref Entitlement BoP (Beginning of Period)**")
+        bop_display = tier1_results['tier1_bop'].copy()
+        for col in bop_display.columns:
+            bop_display[col] = bop_display[col].apply(lambda x: f"£{x:,.0f}" if pd.notnull(x) else "£0")
+        st.dataframe(bop_display, use_container_width=True)
+
+    with tier1_tab2:
+        st.write("**Tier 1 Additions (Monthly Capital Contributions)**")
+        additions_display = tier1_results['tier1_additions'].copy()
+        for col in additions_display.columns:
+            additions_display[col] = additions_display[col].apply(lambda x: f"£{x:,.0f}" if pd.notnull(x) else "£0")
+        st.dataframe(additions_display, use_container_width=True)
+
+    with tier1_tab3:
+        st.write("**Tier 1 Pref Accrual in Period**")
+
+        # Show rates reference
+        st.write("**Quarterly Accrual Rates:**")
+        rate_cols = st.columns(3)
+        with rate_cols[0]:
+            st.write("SAV: 2.125% (8.5% ÷ 4)")
+        with rate_cols[1]:
+            st.write("FGC: 2.125% (8.5% ÷ 4)")
+        with rate_cols[2]:
+            st.write("FGC2: 3.0% (12.0% ÷ 4)")
+
+        accruals_display = tier1_results['tier1_accruals'].copy()
+        for col in accruals_display.columns:
+            accruals_display[col] = accruals_display[col].apply(lambda x: f"£{x:,.0f}" if pd.notnull(x) else "£0")
+        st.dataframe(accruals_display, use_container_width=True)
+
+    with tier1_tab4:
+        st.write("**Tier 1 Pref Entitlement EoP (End of Period)**")
+        eop_display = tier1_results['tier1_eop'].copy()
+        for col in eop_display.columns:
+            eop_display[col] = eop_display[col].apply(lambda x: f"£{x:,.0f}" if pd.notnull(x) else "£0")
+        st.dataframe(eop_display, use_container_width=True)
+
+    # Display final distribution summary
+    st.subheader("Final Profit Distribution")
+
+    # Create distribution summary table
+    dist_data = []
+    for shareholder, values in final_distribution.items():
+        clean_name = shareholder.replace("Shareholder Capital: ", "")
+
+        # Determine type (Equity or Loan)
+        share_type = "Equity" if shareholder != "Shareholder Capital: FGC2" else "Loan"
+
+        dist_data.append({
+            'Type': share_type,
+            'Shareholder': clean_name,
+            'Tier 1 Rate': f"{values['Tier 1 Rate']:.1f}%",
+            'Tier 1 Entitlement': f"£{values['Tier 1 Preferential Entitlement']:,.0f}",
+            'Tier 2 Share': f"£{values['Tier 2 Share']:,.0f}",
+            'Total Distribution': f"£{values['Total Distribution']:,.0f}",
+            'Equity %': f"{values['Equity Percentage']:.1f}%"
+        })
+
+    dist_df = pd.DataFrame(dist_data)
+    st.dataframe(dist_df, use_container_width=True, hide_index=True)
+
+    # Create waterfall chart showing profit distribution flow
+    st.subheader("Profit Distribution Waterfall")
+
+    # Prepare waterfall data
+    waterfall_data = {
+        'Stage': ['Total Profit', 'SAV Tier 1', 'FGC Tier 1', 'FGC2 Tier 1', 'Remaining for Tier 2', 'SAV Tier 2',
+                  'FGC Tier 2'],
+        'Amount': [
+            total_profit,
+            -final_distribution['Shareholder Capital: SAV']['Tier 1 Preferential Entitlement'],
+            -final_distribution['Shareholder Capital: FGC']['Tier 1 Preferential Entitlement'],
+            -final_distribution['Shareholder Capital: FGC2']['Tier 1 Preferential Entitlement'],
+            remaining_profit,
+            -final_distribution['Shareholder Capital: SAV']['Tier 2 Share'],
+            -final_distribution['Shareholder Capital: FGC']['Tier 2 Share']
+        ],
+        'Type': ['total', 'relative', 'relative', 'relative', 'total', 'relative', 'relative']
+    }
+
+    waterfall_df = pd.DataFrame(waterfall_data)
+
+    # Create waterfall visualization
+    fig = px.bar(
+        waterfall_df,
+        x='Stage',
+        y='Amount',
+        title='Profit Distribution Waterfall',
+        color='Type',
+        color_discrete_map={'total': 'blue', 'relative': 'red'}
+    )
+
+    fig.update_layout(
+        yaxis_tickformat=',.0f',
+        yaxis_tickprefix='£',
+        showlegend=False
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Create distribution pie charts
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Tier 1 Distribution")
+        tier1_values = [values['Tier 1 Preferential Entitlement'] for values in final_distribution.values()]
+        tier1_labels = [key.replace("Shareholder Capital: ", "") for key in final_distribution.keys()]
+
+        fig1 = px.pie(
+            values=tier1_values,
+            names=tier1_labels,
+            title="Tier 1 Preferential Entitlement",
+            hole=0.4
+        )
+        st.plotly_chart(fig1, use_container_width=True)
+
+    with col2:
+        st.subheader("Tier 2 Distribution")
+        tier2_values = [values['Tier 2 Share'] for values in final_distribution.values() if values['Tier 2 Share'] > 0]
+        tier2_labels = [key.replace("Shareholder Capital: ", "") for key, values in final_distribution.items() if
+                        values['Tier 2 Share'] > 0]
+
+        if tier2_values:
+            fig2 = px.pie(
+                values=tier2_values,
+                names=tier2_labels,
+                title="Tier 2 Distribution (Equity Only)",
+                hole=0.4
+            )
+            st.plotly_chart(fig2, use_container_width=True)
+        else:
+            st.info("No Tier 2 distribution (all profit consumed by Tier 1)")
+
+    # Download options
+    st.subheader("Download Data")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        tier1_combined = pd.concat([
+            tier1_results['tier1_bop'].add_suffix('_BoP'),
+            tier1_results['tier1_additions'].add_suffix('_Add'),
+            tier1_results['tier1_accruals'].add_suffix('_Acc'),
+            tier1_results['tier1_eop'].add_suffix('_EoP')
+        ], axis=1)
+
+        tier1_csv = tier1_combined.to_csv()
+        st.download_button(
+            label="Download Tier 1 Data",
+            data=tier1_csv,
+            file_name="tier1_preferential_entitlement.csv",
+            mime="text/csv"
+        )
+
+    with col2:
+        dist_csv = dist_df.to_csv(index=False)
+        st.download_button(
+            label="Download Distribution Summary",
+            data=dist_csv,
+            file_name="profit_distribution_summary.csv",
+            mime="text/csv"
+        )
+
+    with col3:
+        # Create detailed breakdown CSV
+        detailed_data = []
+        for shareholder, values in final_distribution.items():
+            detailed_data.append({
+                'Shareholder': shareholder,
+                'Tier_1_Rate': values['Tier 1 Rate'],
+                'Tier_1_Entitlement': values['Tier 1 Preferential Entitlement'],
+                'Tier_2_Share': values['Tier 2 Share'],
+                'Total_Distribution': values['Total Distribution'],
+                'Equity_Percentage': values['Equity Percentage']
+            })
+
+        detailed_df = pd.DataFrame(detailed_data)
+        detailed_csv = detailed_df.to_csv(index=False)
+        st.download_button(
+            label="Download Detailed Breakdown",
+            data=detailed_csv,
+            file_name="detailed_profit_breakdown.csv",
+            mime="text/csv"
+        )
+
+
+# Update the create_dashboard function to use the updated profit split tab
+def create_dashboard(cashflow_data: pd.DataFrame, cashflow_generator=None,
+                     annual_base_rate: float = 0.001, debt_cashflow_df=None, equity_cashflow_df=None,
+                     mc_config: dict = None, equity_split_data=None, cash_balance_calculator=None) -> None:
+    """Create the Streamlit dashboard with cashflow data and Monte Carlo simulations."""
+    st.title('Cashflow Analysis Dashboard')
+    summary_calculator = ReturnSummaryCalculator(cashflow_data, DEFAULT_CONFIG)
+
+    # Create tabs for different dashboard sections
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        "Project Cashflow",
+        "Debt Cashflow",
+        "Equity Cashflow",
+        "Return Summary",
+        "Profit Split",  # Updated tab
+        "Monte Carlo Simulation",
+        "Profit Analysis"
+    ])
+
+    with tab1:
+        create_cashflow_analysis(cashflow_data)
+
+    with tab2:
+        display_debt_cashflow(debt_cashflow_df, button_key="debt")
+        if not cashflow_generator.debt_cashflow_df.empty:
+            create_debt_charts(cashflow_generator.debt_cashflow_df)
+
+    with tab3:
+        display_debt_cashflow(equity_cashflow_df, button_key='equity')
+        if equity_split_data:
+            display_equity_split(equity_split_data)
+
+    with tab4:
+        add_return_summary_tab(summary_calculator)
+
+    with tab5:  # Updated Profit Split tab
+        if equity_cashflow_df is not None and not equity_cashflow_df.empty:
+            add_profit_split_tab(summary_calculator, equity_split_data, equity_cashflow_df, cashflow_generator)
+        else:
+            st.warning("Equity cashflow data not available for profit split analysis.")
+
+    with tab6:
+        if mc_config:
+            create_monte_carlo_analysis(cashflow_data, mc_config)
+        else:
+            st.warning("Monte Carlo simulation configuration not provided.")
+
+    with tab7:
+        if mc_config and 'profit_details' in mc_config:
+            create_profit_analysis(cashflow_data, mc_config['profit_details'])
+        else:
+            st.warning("Profit details not provided in the configuration.")
+

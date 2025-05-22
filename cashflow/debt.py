@@ -57,7 +57,8 @@ class LoanProcessor:
 
         # Flip sign as cash out doesn't register as cost
         pivoted = -pivoted
-
+        print(df_filtered )
+        print('RESULT')
         # Populate result dataframe
         for category in pivoted.index:
             for col in pivoted.columns:
@@ -67,7 +68,6 @@ class LoanProcessor:
         # Calculate overview columns
         historical_cols = date_processor.period_strs('historical')
         forecast_cols = date_processor.period_strs('forecast')
-
         for category in result_df.index:
             result_df.loc[category, date_processor.overview_columns[0]] = sum(
                 result_df.loc[category, col] for col in historical_cols if col in result_df.columns
@@ -326,7 +326,8 @@ class DebtCashflow(BaseCashflowEngine):
         loan_section.append(opening_row)
         loan_section.append(closing_row)
         self.forecast_development_loan(loan_section, loan_key, refinancing_date)
-
+        # print(loan_key)
+        # print(loan_data)
         return loan_section
 
     def forecast_development_loan(self, loan_section, loan_key, refinancing_date=None):
@@ -362,7 +363,6 @@ class DebtCashflow(BaseCashflowEngine):
                 if col in self.date_processor.monthly_period_strs:
                     development_costs[col] = self.project_cashflow_df.loc['Development', col]
 
-
         # Find development-related rows in loan section
         development_row_indices = [
             i for i, row in enumerate(loan_section)
@@ -375,7 +375,7 @@ class DebtCashflow(BaseCashflowEngine):
                 try:
                     period_dt = datetime.strptime(col, '%b-%y')
                     # Only adjust values in the specified period range
-                    if (refinancing_date.date() <= period_dt.date() <= cash_payment_start_date.date()):
+                    if refinancing_date.date() <= period_dt.date() <= cash_payment_start_date.date():
                         # Set value to project development cost + additional cost portion
                         dev_value = development_costs.get(col, 0)
                         loan_section[idx][col] = dev_value + additional_cost_per_period
@@ -439,7 +439,7 @@ class DebtCashflow(BaseCashflowEngine):
         coutts_section = self.generate_loan_section(
             "Coutts Loan",
             self.mezzanine_loan_statement,
-            "mezzanine_loan"
+            "mezzanine_loan",
         )
         self.cashflow_df = pd.concat(
             [self.cashflow_df, pd.DataFrame(coutts_section)],
