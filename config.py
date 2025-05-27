@@ -193,11 +193,11 @@ CATEGORIES = {
     ],
     'senior_loan': [
         "Acquisition", "Fees", "Development", "Capitalised Interest",
-        "Non-utilisation Fee", "IMS Fees", "Cash Payment", "Loan Redemption"
+        "Non-utilisation Fee", "IMS Fees",
     ],
     'mezzanine_loan': [
         "Refinancing", "Fees", "Development", "Capitalised Interest",
-        "Non-utilisation Fee", "IMS Fees", "Cash Payment"
+        "Non-utilisation Fee", "IMS Fees",
     ],
     "financing": ["Financing costs"],
     "total_project_components": ["Acquisition", "Development", "Financing costs"],
